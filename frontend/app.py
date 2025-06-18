@@ -1,0 +1,74 @@
+from flask import Flask, render_template, request, Response, stream_with_context
+import json
+import os
+import threading
+import queue
+import shutil
+import uuid
+from datetime import datetime
+
+from run_agent import main as run_agent
+
+app = Flask(__name__)
+
+# In-memory log storage and queue for SSE
+log_entries = []
+log_queue = queue.Queue()
+
+USER_FILES_BASE = os.path.join('outputs', 'uploaded_files')
+os.makedirs(USER_FILES_BASE, exist_ok=True)
+
+def emit_log(log):
+    log_entries.append(log)
+    log_queue.put(log)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/log', methods=['POST'])
+def receive_log():
+    log = request.get_json(force=True)
+    emit_log(log)
+    return {'status': 'ok'}, 200
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    # Store uploaded files in outputs/user_files/<unique_subdir>
+    unique_id = datetime.now().strftime('%Y%m%d_%H%M%S_') + str(uuid.uuid4())[:8]
+    user_dir = os.path.join(USER_FILES_BASE, unique_id)
+    for file in request.files.getlist('files'):
+        rel_path = file.filename
+        abs_path = os.path.join(user_dir, rel_path)
+        os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+        file.save(abs_path)
+    # Start processing in a background thread
+    threading.Thread(target=process_dataset, args=(user_dir,), daemon=True).start()
+    return {'status': 'uploaded', 'user_dir': user_dir}, 200
+
+def process_dataset(dataset_dir):
+    # Copy the dataset to outputs/user_files
+    shutil.copytree(dataset_dir, "outputs/user_files", dirs_exist_ok=True)
+    # Run the agent
+    result = run_agent(logger_type="http")
+    
+    # Emit the final response
+    emit_log({
+        "type": "final_response",
+        "response": result
+    })
+
+@app.route('/stream')
+def stream():
+    def event_stream():
+        # Send all previous logs first
+        for log in log_entries:
+            yield f'data: {json.dumps(log, ensure_ascii=False)}\n\n'
+        # Then stream new logs as they arrive
+        while True:
+            log = log_queue.get()
+            yield f'data: {json.dumps(log, ensure_ascii=False)}\n\n'
+    return Response(stream_with_context(event_stream()), mimetype='text/event-stream')
+
+if __name__ == '__main__':
+    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=8000, threaded=True)
