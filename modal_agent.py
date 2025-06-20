@@ -20,7 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Modal App
-app = modal.App("sandbox-environment")
+app = modal.App("dataset-processor-agent")
 
 # Base image for the remote environment
 image = (
@@ -41,9 +41,10 @@ def get_agent_command(workspace: str):
         f"All files you generate should be saved in the '{workspace}' directory."
         f"Save the dataset to disk as '{workspace}/dataset_hf'."
     )
+    
 
 @app.function(image=image, timeout=900, secrets=[modal.Secret.from_name("openai-secret")])
-def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "stdout"):
+def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "stdout", endpoint_url: str = None):
     """
     Runs the coding agent inside a Modal environment.
     This function creates a session-specific volume, waits for data, and then executes the agent.
@@ -52,7 +53,7 @@ def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "st
     
     volume_name = f"dataset-volume-{session_id}"
     logger_module.info(f"Using persistent volume: '{volume_name}'")
-    volume = modal.Volume.from_name(volume_name, create_if_missing=True)
+    volume = modal.Volume.from_name(volume_name, create_if_missing=False)
     
     logger_module.info("Creating sandbox with persistent volume...")
     sb = None
@@ -73,6 +74,7 @@ def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "st
                 error_msg = f"Timeout: Session data not found in volume '{volume_name}' after {timeout_seconds}s."
                 logger_module.error(error_msg)
                 raise TimeoutError(error_msg)
+            
             
             proc = sb.exec("test", "-f", "/workspace/AGENTS.md")
             try:
@@ -123,7 +125,8 @@ def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "st
                 request=agent_command,
                 container_or_sandbox=sb,
                 logger=logger_str,
-                use_modal=True
+                use_modal=True,
+                endpoint_url=endpoint_url
             )
             logger_module.info("Agent execution completed successfully.")
             return result
@@ -134,15 +137,6 @@ def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "st
             logger_module.error(f"Agent execution failed: {e}")
             raise
             
-    except modal.error.SandboxError as e:
-        logger_module.error(f"Modal sandbox error: {e}")
-        raise
-    except modal.error.TimeoutError as e:
-        logger_module.error(f"Modal operation timed out: {e}")
-        raise
-    except modal.error.VolumeError as e:
-        logger_module.error(f"Modal volume error: {e}")
-        raise
     except Exception as e:
         logger_module.error(f"Unexpected error creating sandbox: {e}")
         raise
@@ -155,7 +149,7 @@ def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "st
                 logger_module.warning(f"Error during sandbox cleanup: {cleanup_error}")
 
 @app.local_entrypoint()
-def main(session_id: str, context: str = "", logger: str = "stdout"):
+def main(session_id: str, context: str = "", logger: str = "stdout", endpoint_url: str = None):
     """
     Local entrypoint to run the agent.
     - Triggers the remote Modal function with a session_id.
@@ -164,7 +158,7 @@ def main(session_id: str, context: str = "", logger: str = "stdout"):
     logger_module.info(f"Starting Modal agent execution for session_id: {session_id}")
 
     logger_module.info("Calling remote function `run_agent_remotely`...")
-    run_agent_remotely.remote(session_id=session_id, context=context, logger_str=logger)
+    run_agent_remotely.remote(session_id=session_id, context=context, logger_str=logger, endpoint_url=endpoint_url)
 
 if __name__ == "__main__":
     logger.info("Modal agent runner - use `modal run modal_agent.py --session-id <ID>` to execute.") 

@@ -32,11 +32,11 @@
   - [x] 2.3 Modify upload endpoint to store files in the created volume
   - [x] 2.4 Test volume creation and file storage via Modal web interface
 
-- [ ] 3.0 Modify coding_agent to accept endpoint_url parameter
-  - [ ] 3.1 Update coding_agent function signature to accept endpoint_url
-  - [ ] 3.2 Modify HTTPEndpointLogger initialization to use provided endpoint_url
-  - [ ] 3.3 Update any calling functions to pass the endpoint_url parameter
-  - [ ] 3.4 Test coding_agent with manual endpoint_url parameter
+- [x] 3.0 Modify coding_agent to accept endpoint_url parameter
+  - [x] 3.1 Update coding_agent function signature to accept endpoint_url
+  - [x] 3.2 Modify HTTPEndpointLogger initialization to use provided endpoint_url
+  - [x] 3.3 Update any calling functions to pass the endpoint_url parameter
+  - [x] 3.4 Test coding_agent with manual endpoint_url parameter
 
 - [ ] 4.0 Implement real-time logging display in frontend
   - [ ] 4.1 Copy SSE streaming functionality from Flask app
