@@ -42,15 +42,19 @@ def upload():
         abs_path = os.path.join(user_dir, rel_path)
         os.makedirs(os.path.dirname(abs_path), exist_ok=True)
         file.save(abs_path)
+    
+    # Get experiment context from form data
+    experiment_context = request.form.get('experimentContext', '')
+    
     # Start processing in a background thread
-    threading.Thread(target=process_dataset, args=(user_dir,), daemon=True).start()
+    threading.Thread(target=process_dataset, args=(user_dir, experiment_context), daemon=True).start()
     return {'status': 'uploaded', 'user_dir': user_dir}, 200
 
-def process_dataset(dataset_dir):
+def process_dataset(dataset_dir, experiment_context):
     # Copy the dataset to outputs/user_files
     shutil.copytree(dataset_dir, "outputs/user_files", dirs_exist_ok=True)
-    # Run the agent
-    result = run_agent(logger_type="http")
+    # Run the agent with context
+    result = run_agent(logger_type="http", context=experiment_context)
     
     # Emit the final response
     emit_log({

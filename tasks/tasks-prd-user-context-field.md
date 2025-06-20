@@ -24,11 +24,11 @@
   - [x] 1.4 Update JavaScript to capture textarea content in form submission
   - [x] 1.5 Include context in FormData sent to backend
   - [x] 1.6 Ensure textarea is positioned between file selection and upload button
-- [ ] 2.0 Backend Context Handling
-  - [ ] 2.1 Modify upload endpoint in app.py to receive context parameter
-  - [ ] 2.2 Update process_dataset function to accept and pass context
-  - [ ] 2.3 Ensure context is properly extracted from request data
-  - [ ] 2.4 Handle cases where context is empty or not provided (ideally no code changes)
+- [x] 2.0 Backend Context Handling
+  - [x] 2.1 Modify upload endpoint in app.py to receive context parameter
+  - [x] 2.2 Update process_dataset function to accept and pass context
+  - [x] 2.3 Ensure context is properly extracted from request data
+  - [x] 2.4 Handle cases where context is empty or not provided (ideally no code changes)
 - [ ] 3.0 AGENTS.md Integration
   - [ ] 3.1 Modify run_agent.py to accept optional context parameter
   - [ ] 3.2 Implement logic to append user context as "Experiment Details" section within the sandbox (outputs/user_files)

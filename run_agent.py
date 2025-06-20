@@ -93,7 +93,34 @@ def stop_container(name: str):
         raise
 
 
-def main(logger_type: str = "stdout"):
+def modify_agents_md(context: str):
+    """Append user context to AGENTS.md as a new section."""
+    agents_md_path = OUTPUT_DIR / "AGENTS.md"
+    
+    if not agents_md_path.exists():
+        logger.error(f"AGENTS.md not found at {agents_md_path}")
+        raise FileNotFoundError(f"AGENTS.md not found at {agents_md_path}")
+    
+    try:
+        # Read existing content
+        with open(agents_md_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Append user context as new section
+        context_section = f"\n\n## Experiment Details\n\n{context}\n"
+        updated_content = content + context_section
+        
+        # Write back to file
+        with open(agents_md_path, 'w', encoding='utf-8') as f:
+            f.write(updated_content)
+        
+        logger.info(f"    Added user context to AGENTS.md")
+    except Exception as e:
+        logger.error(f"Failed to modify AGENTS.md: {e}")
+        raise
+
+
+def main(logger_type: str = "stdout", context: str = ""):
     
     # Step 0: copy user files
     logger.info(">>> [0] Copying files from agent_sandbox/user_files to outputs/user_files...")
@@ -102,13 +129,18 @@ def main(logger_type: str = "stdout"):
     logger.info(">>> [0] Copying files from my_files to outputs/user_files...")
     copy_dir(MY_FILES_DIR, OUTPUT_DIR)
 
-    # Step 1: start container
+    # Step 1: Modify AGENTS.md with user context if provided
+    if context:
+        logger.info(">>> [0] Adding user context to AGENTS.md...")
+        modify_agents_md(context)
+
+    # Step 2: start container
     container = start_container(CONTAINER_SCRIPT)
 
-    # Step 2: run agent
+    # Step 3: run agent
     response = run_agent_step(AGENT_COMMAND, container, logger_type)
 
-    # Step 3: stop container
+    # Step 4: stop container
     stop_container(container)
 
     logger.info("\n✅ Agent execution completed successfully!")
