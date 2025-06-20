@@ -13,6 +13,7 @@
 - `modal_config.py` - Modal configuration (created in Task 1.0)
 - `test_agent_compatibility.py` - Comprehensive tests for Docker/Modal compatibility
 - `test_context_functionality.py` - Tests for context handling functionality
+- `test_docker_compatibility.py` - Tests for our project's Docker compatibility
 
 ### Notes
 
@@ -43,11 +44,11 @@
   - [x] 3.5 Add output download from ephemeral volume
   - [x] 3.6 Implement error handling for sandbox failures and timeouts
   - [x] 3.7 Add file size validation (>5MB limit)
-- [ ] 4.0 Agent Sandbox Compatibility Layer
+- [x] 4.0 Agent Sandbox Compatibility Layer
   - [x] 4.1 Add Modal environment detection to coding_agent.py
   - [x] 4.2 Implement conditional logging based on environment
   - [x] 4.3 Ensure agent works in both Docker and Modal environments
-  - [ ] 4.4 Test agent compatibility with existing Docker setup
+  - [x] 4.4 Test agent compatibility with existing Docker setup
 - [ ] 5.0 Frontend Integration and Testing
   - [x] 5.1 Update frontend/app.py to use new modal_agent.py
   - [ ] 5.2 Ensure real-time logging continues to work with Modal
