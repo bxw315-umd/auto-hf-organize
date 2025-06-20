@@ -140,7 +140,10 @@ def run_agent_in_sandbox(session_dir_str: str, context: str = "", logger: str = 
     logger_module.info("Creating custom image...")
     image = (
         modal.Image.debian_slim()
+        .apt_install("ripgrep", "ed")  # Install ripgrep and ed
         .pip_install_from_requirements("agent_sandbox/user_files/requirements.txt")
+        .add_local_file("agent_sandbox/tools/apply_patch", "/usr/local/bin/apply_patch")  # Add apply_patch tool
+        .run_commands("chmod +x /usr/local/bin/apply_patch")  # Make apply_patch executable
     )
     
     # Modify AGENTS.md with user context if provided
