@@ -65,6 +65,26 @@
             background: #a1a1aa;
             cursor: not-allowed;
         }
+        .upload-form textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            background: #fff;
+            color: #18181b;
+        }
+        .upload-form textarea:focus {
+            outline: none;
+            border-color: #18181b;
+            box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.1);
+        }
+        .upload-form textarea::placeholder {
+            color: #a1a1aa;
+        }
         .upload-status {
             color: #059669;
             font-size: 1rem;
@@ -151,6 +171,8 @@
         <form class="upload-form" id="uploadForm">
             <label for="datasetDir">Upload a dataset directory:</label>
             <input type="file" id="datasetDir" name="datasetDir" webkitdirectory directory multiple required />
+            <label for="experimentContext">Experiment Context (optional):</label>
+            <textarea id="experimentContext" name="experimentContext" placeholder="Describe your experiment, including any important details about file naming conventions, experimental conditions, or data structure that might not be obvious from file names alone."></textarea>
             <button type="submit">Upload Dataset</button>
             <div class="upload-status" id="uploadStatus"></div>
         </form>
@@ -160,6 +182,7 @@
         // Directory upload logic
         const uploadForm = document.getElementById('uploadForm');
         const datasetDir = document.getElementById('datasetDir');
+        const experimentContext = document.getElementById('experimentContext');
         const uploadStatus = document.getElementById('uploadStatus');
         let uploading = false;
         uploadForm.addEventListener('submit', async function(e) {
@@ -178,6 +201,8 @@
                 // Preserve directory structure
                 formData.append('files', file, file.webkitRelativePath);
             }
+            // Add experiment context to form data
+            formData.append('experimentContext', experimentContext.value);
             try {
                 const res = await fetch('/upload', {
                     method: 'POST',
