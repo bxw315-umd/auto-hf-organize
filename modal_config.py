@@ -15,51 +15,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Modal App configuration
-MODAL_APP_NAME = "sandbox-environment"
-# Path to the requirements file inside the agent_sandbox submodule
-REQUIREMENTS_PATH = "agent_sandbox/user_files/requirements.txt"
+stub = modal.Stub("huggingface-dataset-organizer")
 
-app = modal.App(MODAL_APP_NAME)
-
-base_image = (
-    modal.Image.debian_slim()
-    .pip_install_from_requirements(REQUIREMENTS_PATH)
-    .run_commands(
-        "mkdir -p /workspace /output",
-    )
+# Mount the agent sandbox directory
+agent_sandbox_mount = modal.Mount.from_local_dir(
+    "agent_sandbox", remote_path="/root/agent_sandbox"
 )
 
-def create_custom_image_with_files(local_dir_path: str):
-    """
-    Creates a custom Modal image by mounting a local directory
-    to the /workspace path in the container.
-    """
-    return base_image.add_local_dir(local_dir_path, "/workspace")
-
-# Global app instance
-_modal_app = None
-_base_image = None
-
-def initialize_modal():
-    """Initialize Modal app and base image."""
-    global _modal_app, _base_image
-    
-    if _modal_app is None:
-        _modal_app = app
-    
-    if _base_image is None:
-        _base_image = base_image
-    
-    return _modal_app, _base_image
-
-def get_app():
-    """Get the Modal app instance."""
-    if _modal_app is None:
-        initialize_modal()
-    return _modal_app
-
-def get_image():
-    """Get the base Modal image."""
-    if _base_image is None:
-        initialize_modal()
-    return _base_image 
+# Define the Modal image
+sandbox_image = (
+    modal.Image.debian_slim(python_version="3.10")
+    .pip_install_from_requirements("agent_sandbox/user_files/requirements.txt")
+) 

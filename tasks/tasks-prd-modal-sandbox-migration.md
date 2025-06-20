@@ -10,6 +10,7 @@
 - `outputs/uploaded_files/` - Directory where unique user directories are created
 - `modal_agent.py` - New Modal-based agent runner (to be created)
 - `requirements.txt` - May need Modal dependency addition
+- `modal_config.py` - Modal configuration (created in Task 1.0)
 
 ### Notes
 
@@ -18,6 +19,7 @@
 - Each user session gets its own ephemeral sandbox environment
 - File management uses unique directories within outputs/uploaded_files
 - Agent sandbox submodule must maintain compatibility with both Docker and Modal
+- **CORRECTION**: Initially created `modal_run_agent.py` with incorrect mounting approach - should create `modal_agent.py` with proper sandbox structure
 
 ## Tasks
 
@@ -31,16 +33,16 @@
   - [x] 2.2 Update directory structure to work with Modal mounting
   - [x] 2.3 Implement file copying from my_files to unique user directory
   - [x] 2.4 Ensure proper file permissions and structure for Modal sandbox
-- [ ] 3.0 Modal Agent Runner Implementation
-  - [ ] 3.1 Create modal_agent.py with basic Modal sandbox structure
-  - [ ] 3.2 Implement ephemeral volume creation and management
-  - [ ] 3.3 Add Modal image creation with local directory mounting
-  - [ ] 3.4 Implement sandbox creation and agent execution logic
-  - [ ] 3.5 Add output download from ephemeral volume
-  - [ ] 3.6 Implement error handling for sandbox failures and timeouts
-  - [ ] 3.7 Add file size validation (>5MB limit)
+- [x] 3.0 Modal Agent Runner Implementation
+  - [x] 3.1 Create modal_agent.py with basic Modal sandbox structure
+  - [x] 3.2 Implement ephemeral volume creation and management
+  - [x] 3.3 Add Modal image creation with local directory mounting
+  - [x] 3.4 Implement sandbox creation and agent execution logic
+  - [x] 3.5 Add output download from ephemeral volume
+  - [x] 3.6 Implement error handling for sandbox failures and timeouts
+  - [x] 3.7 Add file size validation (>5MB limit)
 - [ ] 4.0 Agent Sandbox Compatibility Layer
-  - [ ] 4.1 Add Modal environment detection to coding_agent.py
+  - [x] 4.1 Add Modal environment detection to coding_agent.py
   - [ ] 4.2 Implement conditional logging based on environment
   - [ ] 4.3 Ensure agent works in both Docker and Modal environments
   - [ ] 4.4 Test agent compatibility with existing Docker setup
