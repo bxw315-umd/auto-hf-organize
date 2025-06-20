@@ -97,6 +97,11 @@ def modify_agents_md(context: str):
     """Append user context to AGENTS.md as a new section."""
     agents_md_path = OUTPUT_DIR / "AGENTS.md"
     
+    # Validate context parameter
+    if not isinstance(context, str):
+        logger.error(f"Invalid context type: {type(context)}, expected string")
+        raise ValueError(f"Context must be a string, got {type(context)}")
+    
     if not agents_md_path.exists():
         logger.error(f"AGENTS.md not found at {agents_md_path}")
         raise FileNotFoundError(f"AGENTS.md not found at {agents_md_path}")
@@ -115,6 +120,12 @@ def modify_agents_md(context: str):
             f.write(updated_content)
         
         logger.info(f"    Added user context to AGENTS.md")
+    except UnicodeDecodeError as e:
+        logger.error(f"Failed to read AGENTS.md due to encoding issues: {e}")
+        raise
+    except PermissionError as e:
+        logger.error(f"Permission denied when modifying AGENTS.md: {e}")
+        raise
     except Exception as e:
         logger.error(f"Failed to modify AGENTS.md: {e}")
         raise
@@ -132,7 +143,12 @@ def main(logger_type: str = "stdout", context: str = ""):
     # Step 1: Modify AGENTS.md with user context if provided
     if context:
         logger.info(">>> [0] Adding user context to AGENTS.md...")
-        modify_agents_md(context)
+        try:
+            modify_agents_md(context)
+        except (FileNotFoundError, ValueError, UnicodeDecodeError, PermissionError) as e:
+            logger.error(f"Failed to modify AGENTS.md: {e}")
+            logger.info("    Continuing without user context...")
+            # Continue execution without user context rather than failing completely
 
     # Step 2: start container
     container = start_container(CONTAINER_SCRIPT)

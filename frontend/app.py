@@ -43,8 +43,12 @@ def upload():
         os.makedirs(os.path.dirname(abs_path), exist_ok=True)
         file.save(abs_path)
     
-    # Get experiment context from form data
+    # Get experiment context from form data with validation
     experiment_context = request.form.get('experimentContext', '')
+    
+    # Validate context is a string
+    if not isinstance(experiment_context, str):
+        experiment_context = str(experiment_context) if experiment_context is not None else ''
     
     # Start processing in a background thread
     threading.Thread(target=process_dataset, args=(user_dir, experiment_context), daemon=True).start()

@@ -29,16 +29,16 @@
   - [x] 2.2 Update process_dataset function to accept and pass context
   - [x] 2.3 Ensure context is properly extracted from request data
   - [x] 2.4 Handle cases where context is empty or not provided (ideally no code changes)
-- [ ] 3.0 AGENTS.md Integration
-  - [ ] 3.1 Modify run_agent.py to accept optional context parameter
-  - [ ] 3.2 Implement logic to append user context as "Experiment Details" section within the sandbox (outputs/user_files)
-  - [ ] 3.3 Ensure AGENTS.md modification happens before agent execution
-  - [ ] 3.4 Preserve original AGENTS.md structure and content
-- [ ] 4.0 Error Handling and Validation
-  - [ ] 4.1 Add error handling for AGENTS.md file operations
-  - [ ] 4.2 Implement graceful failure if AGENTS.md modification fails
-  - [ ] 4.3 Add validation to ensure context is properly received
-  - [ ] 4.4 Handle edge cases where AGENTS.md doesn't exist in outputs/user_files
+- [x] 3.0 AGENTS.md Integration
+  - [x] 3.1 Modify run_agent.py to accept optional context parameter
+  - [x] 3.2 Implement logic to append user context as "Experiment Details" section within the sandbox (outputs/user_files)
+  - [x] 3.3 Ensure AGENTS.md modification happens before agent execution
+  - [x] 3.4 Preserve original AGENTS.md structure and content
+- [x] 4.0 Error Handling and Validation
+  - [x] 4.1 Add error handling for AGENTS.md file operations
+  - [x] 4.2 Implement graceful failure if AGENTS.md modification fails
+  - [x] 4.3 Add validation to ensure context is properly received
+  - [x] 4.4 Handle edge cases where AGENTS.md doesn't exist in outputs/user_files
 - [ ] 5.0 Testing and Integration
   - [ ] 5.1 Test textarea functionality with various input lengths
   - [ ] 5.2 Verify context is properly captured and sent to backend
