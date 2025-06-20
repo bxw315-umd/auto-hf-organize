@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dataset Upload</title>
+</head>
+<body>
+    <h1>Dataset Upload</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="datasetDir">Upload a dataset directory:</label>
+        <br>
+        <input type="file" id="datasetDir" name="files" webkitdirectory directory multiple required>
+        <br><br>
+        <label for="experimentContext">Experiment Context (optional):</label>
+        <br>
+        <textarea id="experimentContext" name="experiment_context" placeholder="Describe your experiment, including any important details about file naming conventions, experimental conditions, or data structure that might not be obvious from file names alone."></textarea>
+        <br><br>
+        <button type="submit">Upload Dataset</button>
+    </form>
+</body>
+</html> 
