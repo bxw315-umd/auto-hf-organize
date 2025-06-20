@@ -64,8 +64,8 @@ def process_dataset(dataset_dir, experiment_context):
     # Copy generic files from my_files into the unique user directory
     copy_dir(Path(MY_FILES_DIR), Path(dataset_dir))
 
-    # Run the Modal agent with context
-    result = run_agent_in_sandbox(dataset_dir, experiment_context)
+    # Run the Modal agent with context and real-time logging
+    result = run_agent_in_sandbox(dataset_dir, experiment_context, logger="http")
     
     # Emit the final response
     emit_log({

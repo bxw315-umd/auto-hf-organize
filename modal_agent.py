@@ -25,7 +25,8 @@ AGENT_COMMAND = (
     "I've provided you with the raw data files for an experiment. "
     "Please take the dataset and organize it into a huggingface dataset, complete "
     "with metadata columns inferred from the file names. Refer to AGENTS.md for more details. "
-    "Save the dataset to disk as `dataset_hf`."
+    "All files you generate should be saved in the `/output` directory."
+    "Save the dataset to disk as `/output/dataset_hf`."
 )
 
 def copy_dir(src: Path, dst: Path):
@@ -113,29 +114,30 @@ def validate_file_size(session_dir: Path, max_size_mb: int = 5) -> bool:
         logger.error(f"Error during file size validation: {e}")
         return False
 
-def run_agent_in_sandbox(session_dir_str: str, context: str = ""):
+def run_agent_in_sandbox(session_dir_str: str, context: str = "", logger: str = "stdout"):
     """
     Runs the coding agent with a Modal sandbox.
-    
     Args:
         session_dir_str: Path to the session directory containing user files
         context: Optional user context to append to AGENTS.md
+        logger: Logger type to use ('stdout', 'file', 'http', etc.)
     """
     session_dir = Path(session_dir_str)
     
-    logger.info("Starting Modal sandbox agent execution...")
+    logger_module = logging.getLogger(__name__)
+    logger_module.info("Starting Modal sandbox agent execution...")
     
     # Validate file size before proceeding
-    logger.info(">>> [0] Validating file size...")
+    logger_module.info(">>> [0] Validating file size...")
     if not validate_file_size(session_dir):
         raise ValueError(f"Session directory size exceeds the 5MB limit")
     
     # Create/lookup Modal App
-    logger.info("Creating/looking up Modal App...")
+    logger_module.info("Creating/looking up Modal App...")
     app = modal.App.lookup("sandbox-environment", create_if_missing=True)
     
     # Create custom image
-    logger.info("Creating custom image...")
+    logger_module.info("Creating custom image...")
     image = (
         modal.Image.debian_slim()
         .pip_install_from_requirements("agent_sandbox/user_files/requirements.txt")
@@ -143,22 +145,22 @@ def run_agent_in_sandbox(session_dir_str: str, context: str = ""):
     
     # Modify AGENTS.md with user context if provided
     if context:
-        logger.info(">>> [1] Adding user context to AGENTS.md...")
+        logger_module.info(">>> [1] Adding user context to AGENTS.md...")
         try:
             modify_agents_md(context, session_dir)
         except Exception as e:
-            logger.error(f"Failed to modify AGENTS.md: {e}")
-            logger.info("    Continuing without user context...")
+            logger_module.error(f"Failed to modify AGENTS.md: {e}")
+            logger_module.info("    Continuing without user context...")
 
     # Mount the session directory to the sandbox
-    logger.info("Mounting session directory to sandbox...")
+    logger_module.info("Mounting session directory to sandbox...")
     image = image.add_local_dir(session_dir, "/workspace")
 
     # Create ephemeral volume using context manager
-    logger.info("Creating ephemeral volume...")
+    logger_module.info("Creating ephemeral volume...")
     with modal.Volume.ephemeral() as vol:
         # Create Modal Sandbox using the App, image, and ephemeral volume
-        logger.info("Creating sandbox with ephemeral volume...")
+        logger_module.info("Creating sandbox with ephemeral volume...")
         sb = None
         try:
             sb = modal.Sandbox.create(
@@ -168,133 +170,113 @@ def run_agent_in_sandbox(session_dir_str: str, context: str = ""):
                 workdir="/workspace"
             )
             
-            logger.info("Sandbox created successfully!")
+            logger_module.info("Sandbox created successfully!")
             
             # Run the coding agent with the sandbox
-            logger.info(">>> [2] Running coding agent with sandbox...")
-            
+            logger_module.info(">>> [2] Running coding agent with sandbox...")
             try:
-                # Import and run the coding agent
                 sys.path.append(str(Path("agent_sandbox")))
                 from agent_sandbox.coding_agent import run_coding_agent
-                
                 result = run_coding_agent(
                     request=AGENT_COMMAND,
                     container_or_sandbox=sb,
-                    logger="stdout",
+                    logger=logger,
                     use_modal=True
                 )
-                
-                logger.info("Agent execution completed successfully.")
-                
+                logger_module.info("Agent execution completed successfully.")
             except ImportError as e:
-                logger.error(f"Failed to import coding_agent: {e}")
+                logger_module.error(f"Failed to import coding_agent: {e}")
                 raise
             except Exception as e:
-                logger.error(f"Agent execution failed: {e}")
+                logger_module.error(f"Agent execution failed: {e}")
                 raise
             
             # Terminate sandbox (this syncs the volume)
-            logger.info("Terminating sandbox...")
+            logger_module.info("Terminating sandbox...")
             if sb:
                 sb.terminate()
-                logger.info("Sandbox terminated successfully!")
+                logger_module.info("Sandbox terminated successfully!")
             
             # Download results from ephemeral volume
-            logger.info(">>> [3] Downloading results from ephemeral volume...")
+            logger_module.info(">>> [3] Downloading results from ephemeral volume...")
             
             # Create output directory if it doesn't exist
             output_dir = session_dir / "output"
             output_dir.mkdir(exist_ok=True)
             
             # Wait for volume to be ready (similar to minimal example)
-            logger.info("Waiting for volume to be ready...")
+            logger_module.info("Waiting for volume to be ready...")
             time.sleep(5)  # Initial wait to ensure the volume is synced
             
             # List files in the volume to see what was created
-            logger.info("Files in ephemeral volume:")
+            logger_module.info("Files in ephemeral volume:")
             try:
                 for file_info in vol.listdir("/"):
-                    logger.info(f"  - {file_info}")
+                    logger_module.info(f"  - {file_info}")
+                    # Try to get more details about each entry
+                    if file_info.type == modal.volume.FileEntryType.DIRECTORY:
+                        try:
+                            sub_items = list(vol.listdir(f"/{file_info.path}"))
+                            logger_module.info(f"    Contents of {file_info.path}: {len(sub_items)} items")
+                            for sub_item in sub_items:
+                                logger_module.info(f"      - {sub_item}")
+                        except Exception as sub_error:
+                            logger_module.warning(f"    Could not list contents of {file_info.path}: {sub_error}")
             except Exception as e:
-                logger.warning(f"Could not list volume files: {e}")
-                logger.info("Volume may not be ready yet, will retry...")
+                logger_module.warning(f"Could not list volume files: {e}")
+                logger_module.info("Volume may not be ready yet, will retry...")
             
-            # Download the dataset_hf directory if it exists
-            try:
-                dataset_output_dir = output_dir / "dataset_hf"
-                dataset_output_dir.mkdir(exist_ok=True)
-                
-                # Make multiple attempts to download files, waiting between attempts
-                for attempt in range(5):
-                    try:
-                        # Download all files from the dataset_hf directory in the volume
-                        for file_info in vol.listdir("/dataset_hf"):
-                            if file_info.is_file():
-                                local_file_path = dataset_output_dir / file_info.name
-                                with open(local_file_path, "wb") as local_file:
-                                    for data in vol.read_file(f"dataset_hf/{file_info.name}"):
-                                        local_file.write(data)
-                                logger.info(f"Downloaded: {file_info.name}")
-                            elif file_info.is_dir():
-                                # Handle subdirectories if needed
-                                logger.info(f"Found subdirectory: {file_info.name}")
+            # Download all files from the volume recursively
+            logger_module.info("Downloading all files from volume...")
+            
+            def download_all(start_path, local_dest):
+                """Iterates through the volume and downloads all files recursively."""
+                logger_module.info("Listing all files for download...")
+                try:
+                    for entry in vol.iterdir(start_path, recursive=True):
+                        # The full path inside the volume, including the leading slash
+                        full_volume_path = f"/{entry.path}"
+                        # The corresponding destination path on the local filesystem
+                        local_file_path = local_dest / entry.path
                         
-                        logger.info(f"Dataset downloaded to: {dataset_output_dir}")
-                        break  # Success, exit the retry loop
-                        
-                    except Exception as e:
-                        logger.warning(f"Error downloading dataset_hf (attempt {attempt + 1}/5): {e}")
-                        if attempt < 4:  # Don't sleep on the last attempt
-                            time.sleep(5)
-                        else:
-                            logger.error("Failed to download dataset_hf after 5 attempts")
-                            raise
-                
-            except Exception as e:
-                logger.warning(f"Could not download dataset_hf: {e}")
-                logger.info("Checking for other output files...")
-                
-                # Try to download any other files in the volume with retry logic
-                for attempt in range(5):
-                    try:
-                        for file_info in vol.listdir("/"):
-                            if file_info.is_file():
-                                local_file_path = output_dir / file_info.name
-                                with open(local_file_path, "wb") as local_file:
-                                    for data in vol.read_file(file_info.name):
-                                        local_file.write(data)
-                                logger.info(f"Downloaded: {file_info.name}")
-                        break  # Success, exit the retry loop
-                    except Exception as download_error:
-                        logger.warning(f"Error downloading files (attempt {attempt + 1}/5): {download_error}")
-                        if attempt < 4:  # Don't sleep on the last attempt
-                            time.sleep(5)
-                        else:
-                            logger.error("Failed to download files after 5 attempts")
+                        if entry.type == modal.volume.FileEntryType.FILE:
+                            try:
+                                local_file_path.parent.mkdir(parents=True, exist_ok=True)
+                                with open(local_file_path, "wb") as f:
+                                    for chunk in vol.read_file(full_volume_path):
+                                        f.write(chunk)
+                                logger_module.info(f"  Downloaded: {local_file_path}")
+                            except Exception as e:
+                                logger_module.error(f"  Error downloading {full_volume_path}: {e}")
+                except Exception as e:
+                    logger_module.error(f"Could not list files in volume: {e}")
+
+            # Start the download from the root of the volume
+            download_all("/", output_dir)
+            logger_module.info("\nDownload complete.")
             
             return result
             
         except modal.error.SandboxError as e:
-            logger.error(f"Modal sandbox error: {e}")
+            logger_module.error(f"Modal sandbox error: {e}")
             raise
         except modal.error.TimeoutError as e:
-            logger.error(f"Modal operation timed out: {e}")
+            logger_module.error(f"Modal operation timed out: {e}")
             raise
         except modal.error.VolumeError as e:
-            logger.error(f"Modal volume error: {e}")
+            logger_module.error(f"Modal volume error: {e}")
             raise
         except Exception as e:
-            logger.error(f"Unexpected error creating sandbox: {e}")
+            logger_module.error(f"Unexpected error creating sandbox: {e}")
             raise
         finally:
             # Ensure sandbox is terminated even if there's an error
             if sb:
                 try:
                     sb.terminate()
-                    logger.info("Sandbox terminated in cleanup.")
+                    logger_module.info("Sandbox terminated in cleanup.")
                 except Exception as cleanup_error:
-                    logger.warning(f"Error during sandbox cleanup: {cleanup_error}")
+                    logger_module.warning(f"Error during sandbox cleanup: {cleanup_error}")
 
 if __name__ == "__main__":
     # For local testing and development

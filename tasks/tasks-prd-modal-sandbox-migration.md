@@ -51,8 +51,8 @@
   - [x] 4.4 Test agent compatibility with existing Docker setup
 - [ ] 5.0 Frontend Integration and Testing
   - [x] 5.1 Update frontend/app.py to use new modal_agent.py
-  - [ ] 5.2 Ensure real-time logging continues to work with Modal
-  - [ ] 5.3 Test complete user workflow from upload to download
+  - [x] 5.2 Ensure real-time logging continues to work with Modal
+  - [x] 5.3 Test complete user workflow from upload to download
   - [ ] 5.4 Verify concurrent user processing works correctly
   - [ ] 5.5 Test error scenarios and edge cases
   - [ ] 5.6 Remove or deprecate old run_agent.py 
