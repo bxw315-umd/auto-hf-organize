@@ -26,11 +26,11 @@
   - [x] 1.2 Create Modal app configuration and initialization
   - [x] 1.3 Set up Modal authentication and environment variables
   - [x] 1.4 Create base Modal image configuration
-- [ ] 2.0 File Management and Preparation
-  - [ ] 2.1 Modify file preparation logic to copy my_files to unique directory
-  - [ ] 2.2 Update directory structure to work with Modal mounting
-  - [ ] 2.3 Implement file copying from my_files to unique user directory
-  - [ ] 2.4 Ensure proper file permissions and structure for Modal sandbox
+- [x] 2.0 File Management and Preparation
+  - [x] 2.1 Modify file preparation logic to copy my_files to unique directory
+  - [x] 2.2 Update directory structure to work with Modal mounting
+  - [x] 2.3 Implement file copying from my_files to unique user directory
+  - [x] 2.4 Ensure proper file permissions and structure for Modal sandbox
 - [ ] 3.0 Modal Agent Runner Implementation
   - [ ] 3.1 Create modal_agent.py with basic Modal sandbox structure
   - [ ] 3.2 Implement ephemeral volume creation and management

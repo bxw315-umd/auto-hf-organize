@@ -6,8 +6,12 @@ import queue
 import shutil
 import uuid
 from datetime import datetime
+import sys
+from pathlib import Path
 
-from run_agent import main as run_agent
+# Add parent directory to path to import run_agent
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from run_agent import main as run_agent, copy_dir
 
 app = Flask(__name__)
 
@@ -15,7 +19,9 @@ app = Flask(__name__)
 log_entries = []
 log_queue = queue.Queue()
 
+ROOT = os.getcwd()
 USER_FILES_BASE = os.path.join('outputs', 'uploaded_files')
+MY_FILES_DIR = os.path.join(ROOT, "my_files")
 os.makedirs(USER_FILES_BASE, exist_ok=True)
 
 def emit_log(log):
@@ -55,8 +61,9 @@ def upload():
     return {'status': 'uploaded', 'user_dir': user_dir}, 200
 
 def process_dataset(dataset_dir, experiment_context):
-    # Copy the dataset to outputs/user_files
-    shutil.copytree(dataset_dir, "outputs/user_files", dirs_exist_ok=True)
+    # Copy generic files from my_files into the unique user directory
+    copy_dir(Path(MY_FILES_DIR), Path(dataset_dir))
+
     # Run the agent with context
     result = run_agent(logger_type="http", context=experiment_context)
     
