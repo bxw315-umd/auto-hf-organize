@@ -11,6 +11,7 @@ import os
 import time
 import subprocess
 import sys
+import shutil
 
 # Configure logging
 logging.basicConfig(
@@ -26,6 +27,24 @@ AGENT_COMMAND = (
     "with metadata columns inferred from the file names. Refer to AGENTS.md for more details. "
     "Save the dataset to disk as `dataset_hf`."
 )
+
+def copy_dir(src: Path, dst: Path):
+    """Recursively copy contents from src into dst."""
+    if not src.exists():
+        logger.warning(f"Source directory not found: {src}")
+        return
+    dst.mkdir(parents=True, exist_ok=True)
+    for entry in src.iterdir():
+        target = dst / entry.name
+        try:
+            if entry.is_dir():
+                shutil.copytree(entry, target, dirs_exist_ok=True)
+            else:
+                shutil.copy2(entry, target)
+            logger.info(f"Copied {entry} to {target}")
+        except Exception as e:
+            logger.error(f"Failed to copy {entry}: {e}")
+            raise
 
 def modify_agents_md(context: str, session_dir: Path):
     """Append user context to AGENTS.md in the session directory."""

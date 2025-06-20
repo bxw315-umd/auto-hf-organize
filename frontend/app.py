@@ -9,9 +9,9 @@ from datetime import datetime
 import sys
 from pathlib import Path
 
-# Add parent directory to path to import run_agent
+# Add parent directory to path to import modal_agent
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from run_agent import main as run_agent, copy_dir
+from modal_agent import run_agent_in_sandbox, copy_dir
 
 app = Flask(__name__)
 
@@ -64,8 +64,8 @@ def process_dataset(dataset_dir, experiment_context):
     # Copy generic files from my_files into the unique user directory
     copy_dir(Path(MY_FILES_DIR), Path(dataset_dir))
 
-    # Run the agent with context
-    result = run_agent(logger_type="http", context=experiment_context)
+    # Run the Modal agent with context
+    result = run_agent_in_sandbox(dataset_dir, experiment_context)
     
     # Emit the final response
     emit_log({

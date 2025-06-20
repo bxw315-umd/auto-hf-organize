@@ -1,0 +1,21 @@
+# Core dependencies for both Docker and Modal environments
+openai>=1.12.0
+datasets>=2.16.0
+matplotlib>=3.8.0
+numpy>=1.24.0
+
+# Docker support (for local development and testing)
+docker>=6.0.0
+
+# Modal support (for cloud execution)
+modal>=0.58.0
+
+# Web framework
+Flask==2.3.3
+
+# Jupyter support (for agent sandbox)
+ipywidgets
+ipykernel
+
+# Development and testing
+pytest>=7.0.0 
