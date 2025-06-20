@@ -20,17 +20,17 @@
 
 ## Tasks
 
-- [ ] 1.0 Deploy basic Modal web endpoint with file upload functionality
+- [x] 1.0 Deploy basic Modal web endpoint with file upload functionality
   - [x] 1.1 Create Modal web endpoint with basic routing structure
   - [x] 1.2 Copy and adapt Flask app templates and static files
   - [x] 1.3 Implement simple file upload endpoint without volume integration
-  - [ ] 1.4 Deploy to Modal and verify basic functionality works
+  - [x] 1.4 Deploy to Modal and verify basic functionality works
 
-- [ ] 2.0 Integrate dynamic volume creation for uploaded files
-  - [ ] 2.1 Implement session ID generation for unique volume naming
-  - [ ] 2.2 Create Modal volume with format `dataset-volume-{session_id}`
-  - [ ] 2.3 Modify upload endpoint to store files in the created volume
-  - [ ] 2.4 Test volume creation and file storage via Modal web interface
+- [x] 2.0 Integrate dynamic volume creation for uploaded files
+  - [x] 2.1 Implement session ID generation for unique volume naming
+  - [x] 2.2 Create Modal volume with format `dataset-volume-{session_id}`
+  - [x] 2.3 Modify upload endpoint to store files in the created volume
+  - [x] 2.4 Test volume creation and file storage via Modal web interface
 
 - [ ] 3.0 Modify coding_agent to accept endpoint_url parameter
   - [ ] 3.1 Update coding_agent function signature to accept endpoint_url
