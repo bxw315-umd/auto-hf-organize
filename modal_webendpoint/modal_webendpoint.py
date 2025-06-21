@@ -55,7 +55,7 @@ def fastapi_app():
         
         print(f"Experiment context: {experiment_context}")
 
-        base_url = "https://mariotu4--dataset-processor-web-app-fastapi-app-dev.modal.run/"
+        base_url = "https://mariotu4--dataset-processor-web-app-fastapi-app.modal.run/"
         endpoint_url = f"{base_url}/log"
         print(f"Starting coding agent with endpoint_url: {endpoint_url}")
 
