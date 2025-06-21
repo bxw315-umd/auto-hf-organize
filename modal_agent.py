@@ -23,13 +23,12 @@ logger = logging.getLogger(__name__)
 app = modal.App("dataset-processor-agent")
 
 # Base image for the remote environment
-image = (
+function_image = (
     modal.Image.debian_slim()
-    .apt_install("ripgrep", "ed")  # Install ripgrep and ed
     .pip_install_from_requirements("agent_sandbox/user_files/requirements.txt")
-    .add_local_file("agent_sandbox/tools/apply_patch", "/usr/local/bin/apply_patch", copy=True)
-    .run_commands("chmod +x /usr/local/bin/apply_patch")
     .add_local_python_source("agent_sandbox")
+    .add_local_file("agent_sandbox/tools/apply_patch", "/root/apply_patch")
+    .add_local_file("agent_sandbox/user_files/requirements.txt", "/root/requirements.txt")
 )
 
 def get_agent_command(workspace: str):
@@ -43,7 +42,7 @@ def get_agent_command(workspace: str):
     )
     
 
-@app.function(image=image, timeout=900, secrets=[modal.Secret.from_name("openai-secret")])
+@app.function(image=function_image, timeout=900, secrets=[modal.Secret.from_name("openai-secret")])
 def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "stdout", endpoint_url: str = None):
     """
     Runs the coding agent inside a Modal environment.
@@ -57,8 +56,18 @@ def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "st
     
     logger_module.info("Creating sandbox with persistent volume...")
     sb = None
+
+    sandbox_image = (
+        modal.Image.debian_slim()
+        .apt_install("ripgrep", "ed")  # Install ripgrep and ed
+        .pip_install_from_requirements("/root/requirements.txt")
+        .add_local_file("/root/apply_patch", "/usr/local/bin/apply_patch", copy=True)
+        .run_commands("chmod +x /usr/local/bin/apply_patch")
+    )
+
     try:
         sb = modal.Sandbox.create(
+            image=sandbox_image,
             volumes={"/workspace": volume},
             workdir="/workspace",
             timeout=850
@@ -92,27 +101,31 @@ def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "st
         if context:
             logger_module.info(">>> [1] Adding user context to AGENTS.md...")
             
-            script_to_run = (
-                "from pathlib import Path;"
-                "import sys;"
-                f"context = '''{context}''';"
-                "agents_md_path = Path('/workspace/AGENTS.md');"
-                "if not agents_md_path.exists(): sys.exit(1);"
-                "content = agents_md_path.read_text();"
-                "context_section = f'\\n\\n## Experiment Details\\n\\n{context}\\n';"
-                "updated_content = content + context_section;"
-                "agents_md_path.write_text(updated_content);"
-            )
+            script_to_run = f"""
+from pathlib import Path
+import sys
+
+context = '''{context}'''
+agents_md_path = Path('/workspace/AGENTS.md')
+
+if not agents_md_path.exists():
+    sys.exit(1)
+
+content = agents_md_path.read_text()
+context_section = f'\\n\\n## Experiment Details\\n\\n{context}\\n'
+updated_content = content + context_section
+agents_md_path.write_text(updated_content)
+"""
             
-            safe_script = script_to_run.replace("'", "'\\''")
-            
-            proc = sb.exec("python", "-c", safe_script)
+            proc = sb.exec("python", "-c", script_to_run)
             proc.wait()
             if proc.returncode == 0:
                 logger_module.info(f"    Added user context to AGENTS.md in volume '{volume_name}'")
             else:
                 logger_module.error(f"Failed to modify AGENTS.md in volume '{volume_name}'")
                 logger_module.info("    Continuing without user context...")
+        else:
+            logger_module.info("No user context provided. Continuing without user context...")
 
         logger_module.info(">>> [2] Running coding agent with sandbox...")
         try:
@@ -128,6 +141,7 @@ def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "st
                 use_modal=True,
                 endpoint_url=endpoint_url
             )
+
             logger_module.info("Agent execution completed successfully.")
             return result
         except ImportError as e:

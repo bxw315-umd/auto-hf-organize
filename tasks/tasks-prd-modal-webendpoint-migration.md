@@ -18,40 +18,42 @@
 - Unit tests should typically be placed alongside the code files they are testing (e.g., `modal_webendpoint.py` and `modal_webendpoint_test.py` in the same directory).
 - Use `python -m pytest [optional/path/to/test/file]` to run tests. Running without a path executes all tests found by the pytest configuration.
 
-## Tasks
+## Phase 1: Basic Modal Web Endpoint Setup ✅
+- [x] **Task 1.0**: Create minimal Modal web endpoint using FastAPI wrapped by `@modal.asgi_app()`
+- [x] **Task 1.1**: Serve simplified HTML upload form supporting directory uploads
+- [x] **Task 1.2**: Test basic endpoint deployment and accessibility
 
-- [x] 1.0 Deploy basic Modal web endpoint with file upload functionality
-  - [x] 1.1 Create Modal web endpoint with basic routing structure
-  - [x] 1.2 Copy and adapt Flask app templates and static files
-  - [x] 1.3 Implement simple file upload endpoint without volume integration
-  - [x] 1.4 Deploy to Modal and verify basic functionality works
+## Phase 2: Volume Creation and File Storage ✅
+- [x] **Task 2.0**: Implement session ID generation for unique volume naming
+- [x] **Task 2.1**: Create Modal volumes named by session ID
+- [x] **Task 2.2**: Store uploaded files preserving directory structure using `batch_upload()`
+- [x] **Task 2.3**: Test file upload and volume creation
 
-- [x] 2.0 Integrate dynamic volume creation for uploaded files
-  - [x] 2.1 Implement session ID generation for unique volume naming
-  - [x] 2.2 Create Modal volume with format `dataset-volume-{session_id}`
-  - [x] 2.3 Modify upload endpoint to store files in the created volume
-  - [x] 2.4 Test volume creation and file storage via Modal web interface
+## Phase 3: Coding Agent Integration ✅
+- [x] **Task 3.0**: Modify coding agent to accept `endpoint_url` parameter for HTTP logging
+- [x] **Task 3.1**: Update Modal agent runner to pass `endpoint_url` parameter through the chain
+- [x] **Task 3.2**: Test manual integration of coding agent call from Modal web endpoint
+- [x] **Task 3.3**: Verify HTTP logging to web server
 
-- [x] 3.0 Modify coding_agent to accept endpoint_url parameter
-  - [x] 3.1 Update coding_agent function signature to accept endpoint_url
-  - [x] 3.2 Modify HTTPEndpointLogger initialization to use provided endpoint_url
-  - [x] 3.3 Update any calling functions to pass the endpoint_url parameter
-  - [x] 3.4 Test coding_agent with manual endpoint_url parameter
+## Phase 4: Real-time Logging Display ✅
+- [x] **Task 4.0**: Implement real-time logging display in frontend
+- [x] **Task 4.1**: Copy SSE streaming functionality from Flask app
+- [x] **Task 4.2**: Copy log card display functionality from Flask app
+- [x] **Task 4.3**: Test real-time logging with simple test
 
-- [ ] 4.0 Implement real-time logging display in frontend
-  - [ ] 4.1 Copy SSE streaming functionality from Flask app
-  - [ ] 4.2 Implement log endpoint in Modal web endpoint
-  - [ ] 4.3 Add real-time log display cards to frontend interface
-  - [ ] 4.4 Test real-time log streaming functionality
+## Phase 5: Manual Testing and Validation
+- [ ] **Task 5.0**: Test complete end-to-end workflow
+- [ ] **Task 5.1**: Upload test dataset and verify processing
+- [ ] **Task 5.2**: Verify real-time log streaming during agent execution
+- [ ] **Task 5.3**: Test error handling and edge cases
 
-- [ ] 5.0 Manual testing and validation
-  - [ ] 5.1 Test complete workflow: upload → volume creation → agent execution
-  - [ ] 5.2 Verify real-time logging works with Modal endpoint URL
-  - [ ] 5.3 Validate session ID generation and volume isolation
-  - [ ] 5.4 Document any issues or edge cases discovered
+## Phase 6: Full Automation and Polish
+- [ ] **Task 6.0**: Automate agent execution after file upload
+- [ ] **Task 6.1**: Implement proper error handling and user feedback
+- [ ] **Task 6.2**: Add loading states and progress indicators
+- [ ] **Task 6.3**: Test with real datasets and optimize performance
 
-- [ ] 6.0 Automate the complete workflow
-  - [ ] 6.1 Integrate coding_agent call into Modal web endpoint
-  - [ ] 6.2 Pass session_id and endpoint_url to coding_agent automatically
-  - [ ] 6.3 Implement proper error handling and user feedback
-  - [ ] 6.4 Test end-to-end automated workflow 
+## Current Status
+- **Completed**: Tasks 1.0-4.0 (Basic endpoint, volume management, agent integration, real-time logging)
+- **Next**: Task 5.0 (End-to-end testing)
+- **Remaining**: Tasks 5.1-6.3 (Testing, automation, polish) 
