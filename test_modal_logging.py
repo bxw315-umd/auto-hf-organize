@@ -48,7 +48,7 @@ def test_real_modal_sandbox_with_file_logger(temp_workspace):
     logger = FileLogger(str(log_file_path))
     
     # Create/lookup Modal App
-    app = modal.App.lookup("sandbox-environment", create_if_missing=True)
+    app = modal.App.lookup("dataset-processor-agent", create_if_missing=True)
     
     # Create custom image with our test workspace
     image = (

@@ -9,21 +9,24 @@ import zipfile
 from sse_starlette.sse import EventSourceResponse
 from starlette.concurrency import run_in_threadpool
 from queue import Empty
+import modal_shared_app
+from modal_agent import run_agent_remotely
 
 # Create Modal app with FastAPI image
 image = (
     modal.Image.debian_slim()
     .pip_install("fastapi[standard]", "python-multipart", "openai", "sse-starlette")
-    .add_local_dir("templates", "/templates")
-    .add_local_dir("../my_files", "/my_files")
+    .add_local_dir("modal_webendpoint/templates", "/templates")
+    .add_local_dir("my_files", "/my_files")
+    .add_local_python_source("modal_shared_app", "modal_agent")
 )
 
-app = modal.App("dataset-processor-web-app", image=image)
+app = modal_shared_app.app
 
 # Use a Modal Queue for logs, accessible across functions.
 log_queue = modal.Queue.from_name("dataset-processor-log-queue", create_if_missing=True)
 
-@app.function()
+@app.function(image=image)
 @modal.asgi_app()
 def fastapi_app():
     from fastapi import FastAPI, File, UploadFile, Form, Request, HTTPException
@@ -57,12 +60,12 @@ def fastapi_app():
         
         print(f"Experiment context: {experiment_context}")
 
-        base_url = "https://mariotu4--dataset-processor-web-app-fastapi-app.modal.run/"
+        base_url = "https://mariotu4--dataset-processor-agent-fastapi-app.modal.run/"
         endpoint_url = f"{base_url}/log"
         print(f"Starting coding agent with endpoint_url: {endpoint_url}")
 
         # Run the agent in the background
-        run_agent_func = modal.Function.from_name("dataset-processor-agent", "run_agent_remotely")
+        run_agent_func = run_agent_remotely
         run_agent_func.spawn(
             session_id=session_id,
             context=experiment_context,

@@ -4,6 +4,7 @@ Modal-based agent runner for experiment processing.
 Replaces Docker containers with Modal sandboxes for cloud-based execution.
 """
 
+import modal_shared_app
 import modal
 import logging
 from pathlib import Path
@@ -20,13 +21,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Modal App
-app = modal.App("dataset-processor-agent")
+app = modal_shared_app.app
 
 # Base image for the remote environment
 function_image = (
     modal.Image.debian_slim()
     .pip_install_from_requirements("agent_sandbox/user_files/requirements.txt")
     .add_local_python_source("agent_sandbox")
+    .add_local_python_source("modal_shared_app")
     .add_local_file("agent_sandbox/tools/apply_patch", "/root/apply_patch")
     .add_local_file("agent_sandbox/user_files/requirements.txt", "/root/requirements.txt")
 )
