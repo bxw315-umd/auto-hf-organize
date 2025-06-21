@@ -4,6 +4,8 @@ from datetime import datetime
 import io
 import json
 import asyncio
+import os
+import zipfile
 from sse_starlette.sse import EventSourceResponse
 from starlette.concurrency import run_in_threadpool
 from queue import Empty
@@ -24,7 +26,7 @@ log_queue = modal.Queue.from_name("dataset-processor-log-queue", create_if_missi
 @app.function()
 @modal.asgi_app()
 def fastapi_app():
-    from fastapi import FastAPI, File, UploadFile, Form, Request
+    from fastapi import FastAPI, File, UploadFile, Form, Request, HTTPException
     from fastapi.responses import HTMLResponse, StreamingResponse
 
     web_app = FastAPI()
@@ -102,5 +104,43 @@ def fastapi_app():
                 entry = await run_in_threadpool(get_log)
                 yield {"data": json.dumps(entry)}
         return EventSourceResponse(generator())
+
+    @web_app.get("/download/{volume_name}")
+    async def download(volume_name: str):
+        """Download the dataset_hf directory from a specific volume as a zip file"""
+        try:
+            zip_buffer = io.BytesIO()
+            volume = modal.Volume.from_name(volume_name)
+
+            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                try:
+                    # Iterate recursively through the dataset_hf directory
+                    for entry in volume.iterdir("dataset_hf", recursive=True):
+                        # Add only files to the zip archive
+                        if entry.type == modal.volume.FileEntryType.FILE:
+                            # entry.path is the full path from the volume root, e.g., "dataset_hf/data/file.txt"
+                            # We want the path inside the zip to be relative to "dataset_hf", e.g., "data/file.txt"
+                            relative_path = os.path.relpath(entry.path, "dataset_hf")
+                            
+                            # Read the file content and write it to the zip file
+                            content = b"".join(volume.read_file(entry.path))
+                            zip_file.writestr(relative_path, content)
+
+                except FileNotFoundError:
+                    raise HTTPException(
+                        status_code=404, detail="dataset_hf directory not found in volume"
+                    )
+
+            zip_buffer.seek(0)
+            return StreamingResponse(
+                io.BytesIO(zip_buffer.getvalue()),
+                media_type="application/zip",
+                headers={
+                    "Content-Disposition": f"attachment; filename=dataset_hf.zip"
+                },
+            )
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
 
     return web_app

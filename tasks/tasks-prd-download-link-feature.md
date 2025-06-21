@@ -24,11 +24,11 @@
   - [x] 1.2 Add a simple download endpoint that serves files from the volume
   - [x] 1.3 Create a basic HTML page with a download button
   - [x] 1.4 Test the prototype with a known volume and dataset
-- [ ] 2.0 Integrate Download Functionality into Main App
-  - [ ] 2.1 Add download endpoint to the main FastAPI app
-  - [ ] 2.2 Add download button card to the main HTML template
-  - [ ] 2.3 Integrate download link with final response logic
-  - [ ] 2.4 Test download functionality in the main app
+- [x] 2.0 Integrate Download Functionality into Main App
+  - [x] 2.1 Add download endpoint to the main FastAPI app
+  - [x] 2.2 Add download button card to the main HTML template
+  - [x] 2.3 Integrate download link with final response logic
+  - [x] 2.4 Test download functionality in the main app
 - [ ] 3.0 Enhance UI and User Experience
   - [ ] 3.1 Style the download card to match existing design
   - [ ] 3.2 Add loading states and visual feedback

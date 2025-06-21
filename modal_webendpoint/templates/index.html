@@ -152,6 +152,47 @@
         .log-content::-webkit-scrollbar-thumb:hover {
             background: #cbd5e1;
         }
+        /* Download card styles */
+        .download-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(16, 24, 40, 0.06);
+            border: 1px solid #e5e7eb;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .download-card h3 {
+            color: #0f172a;
+            margin: 0 0 12px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .download-card p {
+            color: #64748b;
+            margin: 0 0 16px 0;
+            font-size: 0.95rem;
+        }
+        .download-btn {
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .download-btn:hover {
+            background: #059669;
+        }
+        .download-btn:disabled {
+            background: #a1a1aa;
+            cursor: not-allowed;
+        }
         @media (max-width: 900px) {
             .container { max-width: 98vw; }
         }
@@ -209,6 +250,8 @@
                     body: formData
                 });
                 if (res.ok) {
+                    const responseData = await res.json();
+                    currentVolumeName = responseData.volume_name; // Store the volume name for this session
                     uploadStatus.textContent = 'Upload complete! Processing...';
                 } else {
                     uploadStatus.textContent = 'Upload failed.';
@@ -223,6 +266,8 @@
         const logsContainer = document.getElementById('logs');
         const logCount = document.getElementById('log-count');
         let logIndex = 0;
+        let currentVolumeName = null; // Store the current volume name for this session
+        
         function addLogCard(log) {
             logIndex++;
             const card = document.createElement('div');
@@ -247,6 +292,11 @@
                 responsePre.style.border = '1px solid #bbf7d0';
                 content.appendChild(responsePre);
                 card.appendChild(content);
+                
+                // Add download card after final response if we have a volume name
+                if (currentVolumeName) {
+                    addDownloadCard(currentVolumeName);
+                }
             } else {
                 // Regular command log
                 // Header
@@ -275,6 +325,41 @@
             // Scroll to bottom for new logs
             logsContainer.scrollTop = logsContainer.scrollHeight;
         }
+        
+        function addDownloadCard(volumeName) {
+            // Remove any existing download card
+            const existingCard = document.querySelector('.download-card');
+            if (existingCard) {
+                existingCard.remove();
+            }
+            
+            const downloadCard = document.createElement('div');
+            downloadCard.className = 'download-card';
+            downloadCard.innerHTML = `
+                <h3>Dataset Ready for Download</h3>
+                <p>Your organized Hugging Face dataset has been processed successfully. Click the button below to download it.</p>
+                <a href="/download/${volumeName}" class="download-btn" onclick="handleDownload(event)">
+                    Download Dataset
+                </a>
+            `;
+            
+            logsContainer.appendChild(downloadCard);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+        
+        function handleDownload(event) {
+            const btn = event.target;
+            btn.textContent = 'Downloading...';
+            btn.disabled = true;
+            
+            // The download will start automatically due to the href
+            // Reset button after a short delay
+            setTimeout(() => {
+                btn.textContent = 'Download Dataset';
+                btn.disabled = false;
+            }, 3000);
+        }
+        
         // SSE connection
         const evtSource = new EventSource('/stream');
         evtSource.onmessage = function(event) {
