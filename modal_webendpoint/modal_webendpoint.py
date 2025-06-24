@@ -46,7 +46,7 @@ def fastapi_app():
         experiment_context: str = Form("")
     ):
         session_id = datetime.now().strftime('%Y%m%d_%H%M%S_') + str(uuid.uuid4())[:8]
-        volume_name = f"dataset-volume-{session_id}"
+        volume_name = f"dataset-processor-agent-volume-{session_id}"
         
         print(f"Uploading {len(files)} files for session {session_id}")
         print(f"Creating volume: {volume_name}")

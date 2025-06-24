@@ -13,7 +13,7 @@ with modal.App("create-volume-w-files").run() as app:
     sb = modal.Sandbox.create(
         app=app,
         image=image,
-        volumes={"/workspace": modal.Volume.from_name("dataset-volume-test", create_if_missing=True)},
+        volumes={"/workspace": modal.Volume.from_name("dataset-processor-agent-volume-test", create_if_missing=True)},
         workdir="/workspace"
     )
     print("Sandbox created successfully!")

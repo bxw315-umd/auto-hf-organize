@@ -52,7 +52,7 @@ def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "st
     """
     logger_module = logging.getLogger(__name__)
     
-    volume_name = f"dataset-volume-{session_id}"
+    volume_name = f"dataset-processor-agent-volume-{session_id}"
     logger_module.info(f"Using persistent volume: '{volume_name}'")
     volume = modal.Volume.from_name(volume_name, create_if_missing=False)
     
