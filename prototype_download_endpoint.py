@@ -12,7 +12,7 @@ image = (
     .pip_install("fastapi[standard]", "python-multipart")
 )
 
-volume = modal.Volume.from_name("dataset-processor-agent-volume-20250621_011346_cc9ea6a4")
+volume = modal.Volume.from_name("temp-dataset-processor-agent-volume-20250621_011346_cc9ea6a4")
 
 app = modal.App("prototype-download-endpoint", image=image, volumes={"/workspace": volume})
 

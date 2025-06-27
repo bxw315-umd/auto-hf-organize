@@ -32,7 +32,7 @@ This feature migrates the existing Flask-based file upload and processing applic
 
 3. **Experiment Context**: The system must accept and validate experiment context from form data, maintaining the same validation logic as the current implementation.
 
-4. **Volume Creation**: The system must create a unique Modal volume for each upload session using the format `dataset-processor-agent-volume-{session_id}`.
+4. **Volume Creation**: The system must create a unique Modal volume for each upload session using the format `temp-dataset-processor-agent-volume-{session_id}`.
 
 5. **File Storage**: The system must store uploaded files in the unique volume while preserving directory structure.
 

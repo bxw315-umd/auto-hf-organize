@@ -52,7 +52,7 @@ def run_agent_remotely(session_id: str, context: str = "", logger_str: str = "st
     """
     logger_module = logging.getLogger(__name__)
     
-    volume_name = f"dataset-processor-agent-volume-{session_id}"
+    volume_name = f"temp-dataset-processor-agent-volume-{session_id}"
     logger_module.info(f"Using persistent volume: '{volume_name}'")
     volume = modal.Volume.from_name(volume_name, create_if_missing=False)
     
@@ -163,6 +163,34 @@ agents_md_path.write_text(updated_content)
                 logger_module.info("Sandbox terminated in cleanup.")
             except Exception as cleanup_error:
                 logger_module.warning(f"Error during sandbox cleanup: {cleanup_error}")
+
+delete_image = (
+    modal.Image.debian_slim()
+    .pip_install("modal")
+    .add_local_python_source("modal_shared_app")
+)
+
+@app.function(schedule=modal.Period(days=1), image=delete_image)
+def daily_volume_delete():
+    """
+    Deletes all volumes that are older than 1 day.
+    """
+    import subprocess
+    import json
+    from datetime import datetime, timedelta, timezone
+
+    volumes = subprocess.run(["modal", "volume", "list", "--json"], capture_output=True, text=True)
+    volumes = json.loads(volumes.stdout)
+
+    for volume in volumes:
+        # Parse the volume creation time and make it timezone-aware
+        volume_created = datetime.fromisoformat(volume["Created at"])
+        # Get current time in UTC (timezone-aware)
+        current_time = datetime.now(timezone.utc)
+        
+        if volume_created < current_time - timedelta(days=1):
+            subprocess.run(["modal", "volume", "delete", volume["Name"], "--yes"])
+            print(f"Deleted volume {volume['Name']}")
 
 @app.local_entrypoint()
 def main(session_id: str, context: str = "", logger: str = "stdout", endpoint_url: str = None):
