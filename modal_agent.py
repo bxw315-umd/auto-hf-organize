@@ -170,7 +170,10 @@ delete_image = (
     .add_local_python_source("modal_shared_app")
 )
 
-@app.function(schedule=modal.Period(days=1), image=delete_image)
+@app.function(
+        # schedule=modal.Period(days=1), 
+        image=delete_image
+)
 def daily_volume_delete():
     """
     Deletes all volumes that are older than 1 day.
@@ -183,14 +186,17 @@ def daily_volume_delete():
     volumes = json.loads(volumes.stdout)
 
     for volume in volumes:
-        # Parse the volume creation time and make it timezone-aware
-        volume_created = datetime.fromisoformat(volume["Created at"])
-        # Get current time in UTC (timezone-aware)
-        current_time = datetime.now(timezone.utc)
-        
-        if volume_created < current_time - timedelta(days=1):
-            subprocess.run(["modal", "volume", "delete", volume["Name"], "--yes"])
-            print(f"Deleted volume {volume['Name']}")
+        if volume["Name"].startswith("temp-dataset-processor-agent-volume-"):
+            # Parse the volume creation time and make it timezone-aware
+            volume_created = datetime.fromisoformat(volume["Created at"])
+            # Get current time in UTC (timezone-aware)
+            current_time = datetime.now(timezone.utc)
+            
+            if volume_created < current_time - timedelta(days=1):
+                subprocess.run(["modal", "volume", "delete", volume["Name"], "--yes"])
+                print(f"Deleted volume `{volume['Name']}`")
+        else:
+            print(f"Skipping volume `{volume['Name']}`")
 
 @app.local_entrypoint()
 def main(session_id: str, context: str = "", logger: str = "stdout", endpoint_url: str = None):
